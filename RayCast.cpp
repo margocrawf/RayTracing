@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <cfloat>
 #include <limits>
 
 #if defined(__APPLE__)
@@ -79,9 +80,58 @@ public:
     virtual float  getDistanceFrom ( vec3 x )=0;
 };
 
-// class DirectionalLight : public LightSource
+class DirectionalLight : public LightSource
+{
 
-// class PointLight : public LightSource
+vec3 position;
+vec3 lightDir;
+vec3 powerDensity;
+
+public:
+    DirectionalLight(vec3 powerDensity, vec3 lightSource, vec3 position) :
+        powerDensity(powerDensity), lightDir(lightDir), position(position) {
+
+        }
+    vec3 getPowerDensityAt ( vec3 x ){
+        return powerDensity;
+    }
+
+    vec3 getLightDirAt( vec3 x ) {
+        return lightDir;
+    }
+
+    float  getDistanceFrom ( vec3 x ) {
+        return FLT_MAX;
+    }
+
+};
+
+class PointLight : public LightSource
+{
+
+vec3 position;
+vec3 lightDir;
+vec3 powerDensity;
+
+public:
+    PointLight(vec3 powerDensity, vec3 lightSource, vec3 position) :
+        powerDensity(powerDensity), lightDir(lightDir), position(position) {
+
+        }
+    vec3 getPowerDensityAt ( vec3 x ){
+        return powerDensity * ( 1 / pow(getDistanceFrom(x),2));
+    }
+
+    vec3 getLightDirAt( vec3 x ) {
+        return (x - position).normalize();
+        
+    }
+
+    float  getDistanceFrom ( vec3 x ) {
+        return sqrt( pow(x.x-position.x,2) + pow(x.y-position.y,2) + pow(x.z-position.z,2));
+    }
+
+};
 
 // Camera class.
 
@@ -275,8 +325,9 @@ public:
         return this;
     }
 
-    mat4x4 transform(mat4x4 T) {
+    Quadric* transform(mat4x4 T) {
         coeffs =  T.invert() *  coeffs * T.invert().transpose();
+        return this;
     }
 
     QuadraticRoots solveQuadratic(const Ray& ray) {
@@ -315,7 +366,6 @@ public:
         float res = rhomo.dot( coeffs * rhomo);
         return (res < 0);
     }
-    
 
 };
 
@@ -340,6 +390,11 @@ public:
         shape->setQuadric(shapeQ);
         clipper->setQuadric(clipperQ);
     }
+
+    ClippedQuadric* setQuadrics(Quadric* s, Quadric* c) {
+            shape= s; clipper = c;
+            return this;
+        }
 
     Hit intersect(const Ray& ray) {
         QuadraticRoots qs = shape->solveQuadratic(ray);
@@ -371,31 +426,91 @@ public:
 
 };
 
+class Box : public Intersectable
+{
+    Quadric* slab1;
+    Quadric* slab2;
+    Quadric* slab3;
+
+public:
+    Box(Material* material) : Intersectable(material) {
+        slab1 = new Quadric(material);
+        slab2 = new Quadric(material);
+        slab3 = new Quadric(material);
+
+        slab1->setQuadric(parallelPlanesQ);
+        slab2->setQuadric(parallelPlanesQ);
+        slab2->transform(mat4x4::rotation(vec3(1,0,0), 3.14/2));
+        slab3->setQuadric(parallelPlanesQ);
+        slab3->transform(mat4x4::rotation(vec3(0,0,1), 3.14/2));
+    }
+
+    Box* transform(mat4x4 T) {
+        slab1->transform(T);
+        slab2->transform(T);
+        slab3->transform(T);
+        return this;
+    }
+
+    Hit intersect(const Ray& ray) {
+        QuadraticRoots qs = slab1->solveQuadratic(ray);
+        
+        float loT = qs.getLesserPositive();
+        float hiT = qs.getGreaterPositive();
+
+        float t;
+        if ((slab2->contains(ray.origin + ray.dir * loT)) and 
+            (slab3->contains(ray.origin + ray.dir * loT))) {
+            // use the lower positive if you can
+            t = loT;
+        } else if ((slab2->contains(ray.origin + ray.dir * hiT)) and
+                    (slab3->contains(ray.origin + ray.dir * hiT))){
+            // thats fine, just use the other one
+            t = hiT;
+        } else {
+            // both are no good
+            t = -1;
+        }
+
+        Hit hit;
+        hit.t = t; 
+        hit.material = material;
+        hit.position = ray.origin + ray.dir * t;
+        hit.normal = slab1->getNormalAt(hit.position);
+
+        return hit;
+    }
+
+
+};
+
 class Scene
 {
 	Camera camera;
 	std::vector<Intersectable*> objects;
 	std::vector<Material*> materials;
+    LightSource* l;
 public:
 	Scene()
 	{
-        materials.push_back(new Material( vec3(1,0,0)));
+        l = new DirectionalLight(vec3(1,1,1), vec3(0,-1,-1), vec3(0,-1,-1));
+        materials.push_back(new Material( vec3(1,1,0)));
         materials.push_back(new Material( vec3(0,1,0)));
         materials.push_back(new Material( vec3(0,0,1)));
         materials.push_back(new Wood());
-        //objects.push_back(new Sphere( vec3(0,0,0), 1, materials[0]));
-        //objects.push_back(new Sphere( vec3(0.5, 0.5, 0.7), 0.5, materials[1]));
-        //objects.push_back(new Plane( vec3(0,1,0), vec3(0,-0.4,0), materials[2]));
-        Quadric* q = new Quadric(materials[3]);
-        q->setQuadric(hyperboloidQ);
-        q->transform(mat4x4::scaling(vec3(1,2,1)) * 
-                     mat4x4::rotation(vec3(0,0,1), 1));
-        //objects.push_back(q);
-        ClippedQuadric* c = new ClippedQuadric(materials[3]);
-        c->setQuadrics(coneQ, parallelPlanesQ);
-        c->transform(mat4x4::scaling(vec3(0.5,1,0.5)) * 
-                                 mat4x4::rotation(vec3(1,0,0), 0.75));
-        objects.push_back(c);
+        materials.push_back(new DiffuseMaterial( vec3(1,1,0)));
+
+        objects.push_back(new Plane( vec3(0,1,0), vec3(0,-0.4,0), materials[2]));
+        Quadric* dune = new Quadric(materials[4]);
+        dune->setQuadric(paraboloidQ);
+        dune->transform(mat4x4::scaling(vec3(4,3,3)) * 
+                     mat4x4::rotation(vec3(0,0,1), 3.14));
+        objects.push_back(dune);
+
+        Box* box = new Box(materials[3]);
+        box->transform(mat4x4::scaling(vec3(0.5,0.5,0.5)) * 
+                       mat4x4::translation(vec3(0,-0.25,0)));
+        objects.push_back(box);
 	}
 	~Scene()
 	{
@@ -436,7 +551,8 @@ public:
 		if(hit.t < 0)
 			return vec3(1, 1, 1);
 
-		return hit.material->getColor(hit.position, hit.normal, -ray.dir);
+		return hit.material->shade(hit.position, hit.normal, -ray.dir, 
+               l->getLightDirAt(hit.position), l->getPowerDensityAt(hit.position));
 	}
 };
 

@@ -15,7 +15,10 @@ public:
     Material(vec3 color) : color(color) {
     }
 
-    virtual vec3 shade() {}
+    virtual vec3 shade(vec3 position, vec3 normal, vec3 viewDir,
+                       vec3 lightDir, vec3 powerDensity) {
+        return getColor(position, normal, viewDir);
+    }
 
 	virtual vec3 getColor(
 		vec3 position,
@@ -28,16 +31,24 @@ public:
 
 class DiffuseMaterial: public Material
 {
+    vec3 kd; // diffuse light constant
 
 public:
-    DiffuseMaterial() : 
-        Material(vec3(1,1,1)) {
+    DiffuseMaterial(vec3 color) : 
+        Material(color) {
+        kd = vec3(1,1,1);
     }
 
-    vec3 shade(vec3 lightDir, vec3 powerDensity) {
+    vec3 shade(vec3 position, vec3 normal, vec3 viewDir,
+               vec3 lightDir, vec3 powerDensity) {
         // L = powerDensity . k_d(n * lightDir)+
+        return powerDensity * ( kd * normal.dot(lightDir));
     }
 };
+
+class Metal: public Material
+{
+}
 
 class Wood : public Material
 {
