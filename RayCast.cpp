@@ -534,7 +534,7 @@ public:
         // make the flotsam
         Box* box = new Box(materials[2]);
         box->transform(mat4x4::scaling(vec3(0.25,0.25,0.25)) * 
-                       mat4x4::translation(vec3(0,-0.15,0.15)));
+                       mat4x4::translation(vec3(0,-0.5,1)));
         objects.push_back(box);
 
         //make ball
@@ -567,8 +567,8 @@ public:
         // sandcastle
         ClippedQuadric* tower = new ClippedQuadric(materials[3]);
         tower->setQuadrics(cylinderQ, parallelPlanesQ);
-        tower->transform(mat4x4::scaling(vec3(0.5,0.3,0.5)) * 
-                     mat4x4::translation(vec3(-0.5,0,0.3)));
+        tower->transform(mat4x4::scaling(vec3(0.15,0.15,0.15)) * 
+                     mat4x4::translation(vec3(0,0.15,-1)));
         objects.push_back(tower);
 
 
