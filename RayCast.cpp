@@ -88,7 +88,7 @@ vec3 lightDir;
 vec3 powerDensity;
 
 public:
-    DirectionalLight(vec3 powerDensity, vec3 lightSource, vec3 position) :
+    DirectionalLight(vec3 powerDensity, vec3 lightDir, vec3 position) :
         powerDensity(powerDensity), lightDir(lightDir), position(position) {
 
         }
@@ -114,7 +114,7 @@ vec3 lightDir;
 vec3 powerDensity;
 
 public:
-    PointLight(vec3 powerDensity, vec3 lightSource, vec3 position) :
+    PointLight(vec3 powerDensity, vec3 lightDir, vec3 position) :
         powerDensity(powerDensity), lightDir(lightDir), position(position) {
 
         }
@@ -489,11 +489,13 @@ class Scene
 	Camera camera;
 	std::vector<Intersectable*> objects;
 	std::vector<Material*> materials;
-    LightSource* l;
+    std::vector<LightSource*> lightSources;
 public:
 	Scene()
 	{
-        l = new DirectionalLight(vec3(1,1,1), vec3(0,-1,-1), vec3(0,-1,-1));
+        lightSources.push_back(new DirectionalLight(vec3(1,1,1), vec3(0,-1,1), vec3(0,-1,1)));
+        //lightSources.push_back(new PointLight(vec3(1,1,1), vec3(0,1,0), vec3(0,1,0)));
+
         materials.push_back(new Material( vec3(1,1,0)));
         materials.push_back(new Material( vec3(0,1,0)));
         materials.push_back(new Material( vec3(0,0,1)));
@@ -510,7 +512,7 @@ public:
         Box* box = new Box(materials[3]);
         box->transform(mat4x4::scaling(vec3(0.5,0.5,0.5)) * 
                        mat4x4::translation(vec3(0,-0.25,0)));
-        objects.push_back(box);
+        //objects.push_back(box);
 	}
 	~Scene()
 	{
@@ -551,15 +553,17 @@ public:
 		if(hit.t < 0)
 			return vec3(1, 1, 1);
 
-		return hit.material->shade(hit.position, hit.normal, -ray.dir, 
-               l->getLightDirAt(hit.position), l->getPowerDensityAt(hit.position));
+        vec3 sum = vec3(0,0,0);
+        for (int i = 0; i < lightSources.size(); i++) {
+            LightSource* l = lightSources[i];
+            sum = sum + hit.material->shade(hit.position, hit.normal, -ray.dir, 
+                   l->getLightDirAt(hit.position), l->getPowerDensityAt(hit.position));
+        }
+        return sum;
 	}
 };
 
 Scene scene;
-
-
-
 
 class FrameBuffer {
 	unsigned int textureId;

@@ -4,6 +4,7 @@
 #include "mat4x4.h"
 #include <math.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <limits>
 #include <algorithm>
 
@@ -36,19 +37,21 @@ class DiffuseMaterial: public Material
 public:
     DiffuseMaterial(vec3 color) : 
         Material(color) {
-        kd = vec3(1,1,1);
+        kd = vec3(1,1,0);
     }
 
     vec3 shade(vec3 position, vec3 normal, vec3 viewDir,
                vec3 lightDir, vec3 powerDensity) {
         // L = powerDensity . k_d(n * lightDir)+
-        return powerDensity * ( kd * normal.dot(lightDir));
+        return powerDensity * ( kd * -(normal.dot(lightDir)));
     }
 };
 
+/*
 class Metal: public Material
 {
-}
+};
+*/
 
 class Wood : public Material
 {
