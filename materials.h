@@ -43,7 +43,7 @@ public:
     vec3 shade(vec3 position, vec3 normal, vec3 viewDir,
                vec3 lightDir, vec3 powerDensity) {
         // L = powerDensity . k_d(n * lightDir)+
-        return powerDensity * ( kd * -(normal.dot(lightDir)));
+        return powerDensity * ( kd * (normal.dot(lightDir)));
     }
 };
 
@@ -56,7 +56,7 @@ class SpecularMaterial: public Material
 public:
     SpecularMaterial(vec3 color) : 
         Material(color) {
-        ks = vec3(1,1,1);
+        ks = vec3(0.5,0.5,0.5);
         kd = color;
         gamma = 6;
     }
@@ -65,9 +65,13 @@ public:
                vec3 lightDir, vec3 powerDensity) {
         // halfway = (lightDir + viewDir.normalize()
         // L = powerDensity . k_s(halfway * n)
-        vec3 kd_term = powerDensity * ( kd * -(normal.dot(lightDir)));
+        vec3 kd_term = (powerDensity * ( kd * (normal.dot(lightDir))));
         vec3 halfway = (lightDir + viewDir).normalize();
         vec3 ks_term = powerDensity * ( ks * pow((halfway.dot(normal)), gamma));
+        //printf("ks:\n");
+        //ks_term.print();
+        //printf("kd:\n");
+        //kd_term.print();
         return kd_term + ks_term;
     }
 };

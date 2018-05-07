@@ -493,21 +493,21 @@ class Scene
 public:
 	Scene()
 	{
-        //lightSources.push_back(new DirectionalLight(vec3(1,1,1), 
-        //                       vec3(0,-1,1), vec3(0,-1,1)));
-        lightSources.push_back(new PointLight(vec3(10,10,10), 
-                               vec3(0,0.26,0), vec3(0,0.26,0)));
+        lightSources.push_back(new DirectionalLight(vec3(1,1,1), 
+                               vec3(0,1,0), vec3(0,1,0)));
+        //lightSources.push_back(new PointLight(vec3(10,10,10), 
+        //                       vec3(0,0.2,0.35), vec3(0,0.2,0.35)));
 
         materials.push_back(new Material( vec3(0,1,0)));
         materials.push_back(new Material( vec3(0,0,1)));
         materials.push_back(new Wood());
         materials.push_back(new DiffuseMaterial( vec3(1,1,0)));
-        materials.push_back(new SpecularMaterial( vec3(0,0,1)));
+        materials.push_back(new SpecularMaterial( vec3(0,1,1)));
 
         // make the water
-        objects.push_back(new Plane( vec3(0,1,0), vec3(0,-0.4,0), materials[3]));
+        objects.push_back(new Plane( vec3(0,1,0), vec3(0,-0.4,0), materials[1]));
         //make the dune
-        Quadric* dune = new Quadric(materials[4]);
+        Quadric* dune = new Quadric(materials[3]);
         dune->setQuadric(paraboloidQ);
         dune->transform(mat4x4::scaling(vec3(4,3,3)) * 
                      mat4x4::rotation(vec3(0,0,1), 3.14));
@@ -517,6 +517,34 @@ public:
         box->transform(mat4x4::scaling(vec3(0.5,0.5,0.5)) * 
                        mat4x4::translation(vec3(0,-0.25,0)));
         //objects.push_back(box);
+
+        //make ball
+        Quadric* ball = new Quadric(materials[4]);
+        ball->setQuadric(sphereQ);
+        ball->transform(mat4x4::scaling(vec3(0.25,0.25,0.25)) * 
+                     mat4x4::translation(vec3(1,0.01,0.3)));
+        objects.push_back(ball);
+
+        //make parasol
+        ClippedQuadric* pole = new ClippedQuadric(materials[4]);
+        pole->setQuadrics(cylinderQ, parallelPlanesQ);
+        pole->transform(mat4x4::scaling(vec3(0.05,0.3,0.05)) * 
+                     mat4x4::translation(vec3(-1,0,0.3)));
+        objects.push_back(pole);
+
+        ClippedQuadric* shade = new ClippedQuadric(materials[4]);
+        Quadric* par = new Quadric(materials[3]);
+        par->setQuadric(sphereQ);
+
+        Quadric* clip = new Quadric(materials[3]);
+        clip->setQuadric(parallelPlanesQ);
+        clip->transform(mat4x4::translation(vec3(0,1,0)));
+
+        shade->setQuadrics(par, clip);
+        shade->transform(mat4x4::scaling(vec3(0.25,0.25,0.25)) * 
+                mat4x4::translation(vec3(-1,0.3,0.3)));
+        objects.push_back(shade);
+
 	}
 	~Scene()
 	{
@@ -555,7 +583,7 @@ public:
         Hit hit = firstIntersect(ray);
 
 		if(hit.t < 0)
-			return vec3(1, 1, 1);
+			return vec3(0,0,0);
 
         vec3 sum = vec3(0,0,0);
         for (int i = 0; i < lightSources.size(); i++) {
