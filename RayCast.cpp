@@ -495,6 +495,8 @@ public:
 	{
         lightSources.push_back(new DirectionalLight(vec3(1,1,1), 
                                vec3(0,1,0), vec3(0,1,0)));
+        lightSources.push_back(new DirectionalLight(vec3(1,1,1), 
+                               vec3(0,1,1), vec3(0,1,1)));
         //lightSources.push_back(new PointLight(vec3(10,10,10), 
         //                       vec3(0,0.2,0.35), vec3(0,0.2,0.35)));
 
