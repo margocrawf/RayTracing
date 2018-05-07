@@ -493,22 +493,26 @@ class Scene
 public:
 	Scene()
 	{
-        lightSources.push_back(new DirectionalLight(vec3(1,1,1), vec3(0,-1,1), vec3(0,-1,1)));
-        //lightSources.push_back(new PointLight(vec3(1,1,1), vec3(0,1,0), vec3(0,1,0)));
+        //lightSources.push_back(new DirectionalLight(vec3(1,1,1), 
+        //                       vec3(0,-1,1), vec3(0,-1,1)));
+        lightSources.push_back(new PointLight(vec3(1,1,1), 
+                               vec3(0,0.26,0), vec3(0,0.26,0)));
 
-        materials.push_back(new Material( vec3(1,1,0)));
         materials.push_back(new Material( vec3(0,1,0)));
         materials.push_back(new Material( vec3(0,0,1)));
         materials.push_back(new Wood());
         materials.push_back(new DiffuseMaterial( vec3(1,1,0)));
+        materials.push_back(new SpecularMaterial( vec3(0,0,1)));
 
-        objects.push_back(new Plane( vec3(0,1,0), vec3(0,-0.4,0), materials[2]));
+        // make the water
+        objects.push_back(new Plane( vec3(0,1,0), vec3(0,-0.4,0), materials[3]));
+        //make the dune
         Quadric* dune = new Quadric(materials[4]);
         dune->setQuadric(paraboloidQ);
         dune->transform(mat4x4::scaling(vec3(4,3,3)) * 
                      mat4x4::rotation(vec3(0,0,1), 3.14));
         objects.push_back(dune);
-
+        // make the flotsam
         Box* box = new Box(materials[3]);
         box->transform(mat4x4::scaling(vec3(0.5,0.5,0.5)) * 
                        mat4x4::translation(vec3(0,-0.25,0)));

@@ -37,13 +37,38 @@ class DiffuseMaterial: public Material
 public:
     DiffuseMaterial(vec3 color) : 
         Material(color) {
-        kd = vec3(1,1,0);
+        kd = color;
     }
 
     vec3 shade(vec3 position, vec3 normal, vec3 viewDir,
                vec3 lightDir, vec3 powerDensity) {
         // L = powerDensity . k_d(n * lightDir)+
         return powerDensity * ( kd * -(normal.dot(lightDir)));
+    }
+};
+
+class SpecularMaterial: public Material
+{
+    vec3 ks; // diffuse light constant
+    vec3 kd;
+    int gamma;
+
+public:
+    SpecularMaterial(vec3 color) : 
+        Material(color) {
+        ks = vec3(1,1,1);
+        kd = color;
+        gamma = 6;
+    }
+
+    vec3 shade(vec3 position, vec3 normal, vec3 viewDir,
+               vec3 lightDir, vec3 powerDensity) {
+        // halfway = (lightDir + viewDir.normalize()
+        // L = powerDensity . k_s(halfway * n)
+        vec3 kd_term = powerDensity * ( kd * -(normal.dot(lightDir)));
+        vec3 halfway = (lightDir + viewDir).normalize();
+        vec3 ks_term = powerDensity * ( ks * pow((halfway.dot(normal)), gamma));
+        return kd_term + ks_term;
     }
 };
 
