@@ -440,9 +440,9 @@ public:
 
         slab1->setQuadric(parallelPlanesQ);
         slab2->setQuadric(parallelPlanesQ);
-        slab2->transform(mat4x4::rotation(vec3(1,0,0), 3.14/2));
+        slab2->transform(mat4x4::rotation(vec3(1,0,0), 3.14/2.0));
         slab3->setQuadric(parallelPlanesQ);
-        slab3->transform(mat4x4::rotation(vec3(0,0,1), 3.14/2));
+        slab3->transform(mat4x4::rotation(vec3(0,0,1), 3.14/2.0));
     }
 
     Box* transform(mat4x4 T) {
@@ -453,30 +453,48 @@ public:
     }
 
     Hit intersect(const Ray& ray) {
-        QuadraticRoots qs = slab1->solveQuadratic(ray);
+        // check the slab1 sides
+        QuadraticRoots qs1 = slab1->solveQuadratic(ray);
+        QuadraticRoots qs2 = slab2->solveQuadratic(ray);
+        QuadraticRoots qs3 = slab3->solveQuadratic(ray);
         
-        float loT = qs.getLesserPositive();
-        float hiT = qs.getGreaterPositive();
+        float loT1 = qs1.getLesserPositive();
+        float hiT1 = qs1.getGreaterPositive();
+        float loT2 = qs2.getLesserPositive();
+        float hiT2 = qs2.getGreaterPositive();
+        float loT3 = qs3.getLesserPositive();
+        float hiT3 = qs3.getGreaterPositive();
+
 
         float t;
-        if ((slab2->contains(ray.origin + ray.dir * loT)) and 
-            (slab3->contains(ray.origin + ray.dir * loT))) {
-            // use the lower positive if you can
-            t = loT;
-        } else if ((slab2->contains(ray.origin + ray.dir * hiT)) and
-                    (slab3->contains(ray.origin + ray.dir * hiT))){
-            // thats fine, just use the other one
-            t = hiT;
+        Hit hit;
+        if ((slab2->contains(ray.origin + ray.dir * loT1)) and 
+            (slab3->contains(ray.origin + ray.dir * loT1))) {
+            t = loT1;
+            hit.t = t; 
+            hit.position = ray.origin + ray.dir * t;
+            hit.normal = slab1->getNormalAt(hit.position);
+        } else if ((slab1->contains(ray.origin + ray.dir * loT2)) and 
+                   (slab3->contains(ray.origin + ray.dir * loT2))) {
+            t = loT2;
+            hit.t = t; 
+            hit.position = ray.origin + ray.dir * t;
+            hit.normal = slab2->getNormalAt(hit.position);
+        } else if ((slab1->contains(ray.origin + ray.dir * loT3)) and 
+                   (slab2->contains(ray.origin + ray.dir * loT3))) {
+            t = loT3;
+            hit.t = t; 
+            hit.position = ray.origin + ray.dir * t;
+            hit.normal = slab3->getNormalAt(hit.position);
         } else {
             // both are no good
             t = -1;
+            hit.t = t; 
+            hit.position = ray.origin + ray.dir * t;
+            hit.normal = slab3->getNormalAt(hit.position);
         }
 
-        Hit hit;
-        hit.t = t; 
         hit.material = material;
-        hit.position = ray.origin + ray.dir * t;
-        hit.normal = slab1->getNormalAt(hit.position);
 
         return hit;
     }
@@ -494,8 +512,6 @@ public:
 	Scene()
 	{
         lightSources.push_back(new DirectionalLight(vec3(1,1,1), 
-                               vec3(0,1,0), vec3(0,1,0)));
-        lightSources.push_back(new DirectionalLight(vec3(1,1,1), 
                                vec3(0,1,1), vec3(0,1,1)));
         //lightSources.push_back(new PointLight(vec3(10,10,10), 
         //                       vec3(0,0.2,0.35), vec3(0,0.2,0.35)));
@@ -504,7 +520,8 @@ public:
         materials.push_back(new Material( vec3(0,0,1)));
         materials.push_back(new Wood());
         materials.push_back(new DiffuseMaterial( vec3(1,1,0)));
-        materials.push_back(new SpecularMaterial( vec3(0,1,1)));
+        materials.push_back(new Metal(vec3(0,1,1)));
+        materials.push_back(new SpecularMaterial( vec3(1,0,0)));
 
         // make the water
         objects.push_back(new Plane( vec3(0,1,0), vec3(0,-0.4,0), materials[1]));
@@ -515,10 +532,10 @@ public:
                      mat4x4::rotation(vec3(0,0,1), 3.14));
         objects.push_back(dune);
         // make the flotsam
-        Box* box = new Box(materials[3]);
-        box->transform(mat4x4::scaling(vec3(0.5,0.5,0.5)) * 
-                       mat4x4::translation(vec3(0,-0.25,0)));
-        //objects.push_back(box);
+        Box* box = new Box(materials[2]);
+        box->transform(mat4x4::scaling(vec3(0.25,0.25,0.25)) * 
+                       mat4x4::translation(vec3(0,-0.15,0.15)));
+        objects.push_back(box);
 
         //make ball
         Quadric* ball = new Quadric(materials[4]);
@@ -528,17 +545,17 @@ public:
         objects.push_back(ball);
 
         //make parasol
-        ClippedQuadric* pole = new ClippedQuadric(materials[4]);
+        ClippedQuadric* pole = new ClippedQuadric(materials[5]);
         pole->setQuadrics(cylinderQ, parallelPlanesQ);
         pole->transform(mat4x4::scaling(vec3(0.05,0.3,0.05)) * 
                      mat4x4::translation(vec3(-1,0,0.3)));
         objects.push_back(pole);
 
-        ClippedQuadric* shade = new ClippedQuadric(materials[4]);
-        Quadric* par = new Quadric(materials[3]);
+        ClippedQuadric* shade = new ClippedQuadric(materials[5]);
+        Quadric* par = new Quadric(materials[5]);
         par->setQuadric(sphereQ);
 
-        Quadric* clip = new Quadric(materials[3]);
+        Quadric* clip = new Quadric(materials[5]);
         clip->setQuadric(parallelPlanesQ);
         clip->transform(mat4x4::translation(vec3(0,1,0)));
 
@@ -546,6 +563,9 @@ public:
         shade->transform(mat4x4::scaling(vec3(0.25,0.25,0.25)) * 
                 mat4x4::translation(vec3(-1,0.3,0.3)));
         objects.push_back(shade);
+
+        // sandcastle
+
 
 	}
 	~Scene()
@@ -578,14 +598,25 @@ public:
         return bestHit;
     }
 
-	vec3 trace(const Ray& ray)
+	vec3 trace(const Ray& ray, int depth=5)
 	{
+        if (depth == 0) {
+            return vec3(0,0,0);
+        }
 
 		//Hit hit = objects[0]->intersect(ray);
         Hit hit = firstIntersect(ray);
 
 		if(hit.t < 0)
 			return vec3(0,0,0);
+
+        if ((hit.material != NULL) && (dynamic_cast<Metal*>(hit.material))) {
+            float epsilon = 0.01;
+            vec3 raydir = (hit.normal.normalize() * hit.position) * 2 * (hit.normal - hit.position) + 
+                hit.position*epsilon;
+            Ray refRay = Ray(hit.position, raydir);
+            return trace(refRay, depth-1);
+        }
 
         vec3 sum = vec3(0,0,0);
         for (int i = 0; i < lightSources.size(); i++) {

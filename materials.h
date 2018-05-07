@@ -47,6 +47,14 @@ public:
     }
 };
 
+class Metal: public Material
+{
+public:
+    Metal(vec3 color) : 
+        Material(color) {
+        }
+};
+
 class SpecularMaterial: public Material
 {
     vec3 ks; // diffuse light constant
@@ -115,7 +123,12 @@ public:
         return f / 64.0 + 0.5;
     }
 
-	virtual vec3 getColor(
+    vec3 shade(vec3 position, vec3 normal, vec3 viewDir,
+                       vec3 lightDir, vec3 powerDensity) {
+        return getColor(position, normal, viewDir);
+    }
+
+	vec3 getColor(
 		vec3 position,
 		vec3 normal,
 		vec3 viewDir)
