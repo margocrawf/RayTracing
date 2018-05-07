@@ -565,6 +565,11 @@ public:
         objects.push_back(shade);
 
         // sandcastle
+        ClippedQuadric* tower = new ClippedQuadric(materials[3]);
+        tower->setQuadrics(cylinderQ, parallelPlanesQ);
+        tower->transform(mat4x4::scaling(vec3(0.5,0.3,0.5)) * 
+                     mat4x4::translation(vec3(-0.5,0,0.3)));
+        objects.push_back(tower);
 
 
 	}
