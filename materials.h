@@ -3,6 +3,7 @@
 #include "vec4.h"
 #include "mat4x4.h"
 #include <math.h>
+#include <cmath>
 #include <stdlib.h>
 #include <stdio.h>
 #include <limits>
@@ -58,7 +59,7 @@ public:
 class SpecularMaterial: public Material
 {
     vec3 ks; // diffuse light constant
-    vec3 kd;
+    vec3 kd; // diffuse light constant
     int gamma;
 
 public:
@@ -76,19 +77,44 @@ public:
         vec3 kd_term = (powerDensity * ( kd * (normal.dot(lightDir))));
         vec3 halfway = (lightDir + viewDir).normalize();
         vec3 ks_term = powerDensity * ( ks * pow((halfway.dot(normal)), gamma));
-        //printf("ks:\n");
-        //ks_term.print();
-        //printf("kd:\n");
-        //kd_term.print();
         return kd_term + ks_term;
     }
 };
 
-/*
-class Metal: public Material
+class Ball : public Material
 {
+    vec3 ks; // diffuse light constant
+    int gamma;
+
+public:
+    Ball():
+        Material(vec3(1,1,1))
+{
+        ks = vec3(0.5,0.5,0.5);
+        gamma = 6;
+}
+
+    vec3 shade(vec3 position, vec3 normal, vec3 viewDir,
+               vec3 lightDir, vec3 powerDensity) {
+
+        float phi = atan2(position.x, position.z);
+        vec3 red = shade_color(vec3(1,0,0), position, normal, viewDir,
+                lightDir, powerDensity);
+        vec3 white = shade_color(vec3(1,1,1), position, normal, viewDir,
+                lightDir, powerDensity);
+        return std::fmod(phi, 3.14/32) < 3.14/64 ? red : white;
+
+    }
+
+    vec3 shade_color(vec3 kd, vec3 position, vec3 normal, vec3 viewDir,
+               vec3 lightDir, vec3 powerDensity) {
+        // color the ball based on the kd at that point
+        vec3 kd_term = (powerDensity * ( kd * (normal.dot(lightDir))));
+        vec3 halfway = (lightDir + viewDir).normalize();
+        vec3 ks_term = powerDensity * ( ks * pow((halfway.dot(normal)), gamma));
+        return kd_term + ks_term;
+    }
 };
-*/
 
 class Wood : public Material
 {

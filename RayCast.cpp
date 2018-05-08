@@ -522,9 +522,10 @@ public:
         materials.push_back(new DiffuseMaterial( vec3(1,1,0)));
         materials.push_back(new Metal(vec3(0,1,1)));
         materials.push_back(new SpecularMaterial( vec3(1,0,0)));
+        materials.push_back(new Ball());
 
         // make the water
-        objects.push_back(new Plane( vec3(0,1,0), vec3(0,-0.4,0), materials[1]));
+        objects.push_back(new Plane( vec3(0,1,0), vec3(0,-0.4,0), materials[4]));
         //make the dune
         Quadric* dune = new Quadric(materials[3]);
         dune->setQuadric(paraboloidQ);
@@ -538,7 +539,7 @@ public:
         objects.push_back(box);
 
         //make ball
-        Quadric* ball = new Quadric(materials[4]);
+        Quadric* ball = new Quadric(materials[6]);
         ball->setQuadric(sphereQ);
         ball->transform(mat4x4::scaling(vec3(0.25,0.25,0.25)) * 
                      mat4x4::translation(vec3(1,0.01,0.3)));
@@ -625,11 +626,11 @@ public:
         Hit hit = firstIntersect(ray);
 
 		if(hit.t < 0)
-			return vec3(0,0,0);
+			return vec3(0.5,0.8,0.9);
 
         if ((hit.material != NULL) && (dynamic_cast<Metal*>(hit.material))) {
             float epsilon = 0.01;
-            vec3 raydir = (hit.normal.normalize() * hit.position) * 2 * (hit.normal - hit.position) + 
+            vec3 raydir = (hit.normal.normalize() * hit.position) * 2 * (hit.normal - hit.position);
                 hit.position*epsilon;
             Ray refRay = Ray(hit.position, raydir);
             return trace(refRay, depth-1);
