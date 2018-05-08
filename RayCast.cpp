@@ -509,8 +509,11 @@ public:
         QuadraticRoots qs3 = slab3->solveQuadratic(ray);
         
         float loT1 = qs1.getLesserPositive();
+        float hiT1 = qs1.getGreaterPositive();
         float loT2 = qs2.getLesserPositive();
+        float hiT2 = qs2.getGreaterPositive();
         float loT3 = qs3.getLesserPositive();
+        float hiT3 = qs3.getGreaterPositive();
 
         float t;
         Hit hit;
@@ -688,6 +691,7 @@ public:
 
 	vec3 trace(const Ray& ray, int depth=5)
 	{
+        float epsilon = 0.01;
         if (depth == 0) {
             return vec3(0,0,0);
         }
@@ -696,10 +700,10 @@ public:
         Hit hit = firstIntersect(ray);
 
 		if(hit.t < 0)
-			return vec3(0.5,0.8,0.9);
+			//return vec3(0.5,0.8,0.9);
+            return vec3(0,0,0);
 
         if ((hit.material != NULL) && (dynamic_cast<Metal*>(hit.material))) {
-            float epsilon = 0.01;
             vec3 raydir = (hit.normal.normalize() * hit.position) * 2 * (hit.normal - hit.position);
                 hit.position*epsilon;
             Ray refRay = Ray(hit.position, raydir);
@@ -711,7 +715,14 @@ public:
             LightSource* l = lightSources[i];
             sum = sum + hit.material->shade(hit.position, hit.normal, -ray.dir, 
                    l->getLightDirAt(hit.position), l->getPowerDensityAt(hit.position));
+            vec3 shadowOrigin = hit.position + hit.normal*epsilon;
+            Ray shadowRay = Ray(shadowOrigin, l->getLightDirAt(hit.position));
+            Hit rayHit = firstIntersect(shadowRay);
+            if (rayHit.t != -1) {
+                return vec3(0,0,0);
+            }
         }
+
         return sum;
 	}
 };
