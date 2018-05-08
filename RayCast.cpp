@@ -434,20 +434,45 @@ public:
     PinkingTree(Material* material) : ClippedQuadric(material) {}
 
     Hit intersect(const Ray& ray) {
-        Hit hit = ClippedQuadric::intersect(ray);
+        QuadraticRoots qs = shape->solveQuadratic(ray);
+        
+        float loT = qs.getLesserPositive();
+        float hiT = qs.getGreaterPositive();
 
+        float t;
+
+        if (clipper->contains(ray.origin + ray.dir*loT)) {
+            // use the lower positive if you can
+            vec3 position = ray.origin + ray.dir * loT;
+            vec3 normal = shape->getNormalAt(position);
+            float phi = atan2(normal.x, normal.z);
+            if (std::fmod(std::fmod(phi, 3.14/8)+3.14/8,3.14/8) < 3.14/16) {
+                t = loT;
+            }
+        } 
+        if (clipper->contains(ray.origin + ray.dir*hiT)) {
+            // thats fine, just use the other one
+            vec3 position = ray.origin + ray.dir * hiT;
+            vec3 normal = shape->getNormalAt(position);
+            float phi = atan2(normal.x, normal.z);
+            if (std::fmod(std::fmod(phi, 3.14/8)+3.14/8,3.14/8) < 3.14/16) {
+                t = hiT;
+            }
+        } else {
+            // both are no good
+            t = -1;
+        }
+
+        Hit hit;
+        hit.t = t; 
+        hit.material = material;
+        hit.position = ray.origin + ray.dir * t;
+        hit.normal = shape->getNormalAt(hit.position);
+        
         float phi = atan2(hit.normal.x, hit.normal.z);
 
-        if (std::fmod(std::fmod(phi, 3.14/8)+3.14/8,3.14/8) < 3.14/16) {
-            return hit;
-        } else {
-            Hit dudHit;
-            dudHit.t = -1;
-            dudHit.material = material;
-            dudHit.position = ray.origin + ray.dir*dudHit.t;
-            hit.normal = shape->getNormalAt(hit.position);
-            return dudHit;
-        }
+
+        return hit;
     }
 };
 
