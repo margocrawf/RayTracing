@@ -594,17 +594,10 @@ public:
 
         Quadric* clip3 = new Quadric(materials[0]);
         clip3->setQuadric(parallelPlanesQ);
-        clip3->transform(mat4x4::scaling(vec3(1,0.5,1)));
+        clip3->transform(mat4x4::translation(vec3(0,1,0)));
         l->setQuadrics(sph, clip3);
 
-        Quadric* clip4 = new Quadric(materials[0]);
-        clip4->setQuadric(parallelPlanesQ);
-        clip4->transform(mat4x4::scaling(vec3(1,0.5,1)) * 
-                    mat4x4::rotation(vec3(1,0,0),3.14/2));
-
-        ClippedQuadric* leaf = new ClippedQuadric(materials[0]);
-        leaf->setQuadrics(l, clip4);
-        leaf->transform(mat4x4::scaling(vec3(0.25,0.25,0.25)) *
+        l->transform(mat4x4::scaling(vec3(0.25,0.25,0.25)) *
                 mat4x4::rotation(vec3(0,1,0), 0) *
                 mat4x4::translation(vec3(0,.75,0)));
         objects.push_back(leaf);
