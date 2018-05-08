@@ -571,6 +571,18 @@ public:
                      mat4x4::translation(vec3(0,0.15,-1)));
         objects.push_back(tower);
 
+        ClippedQuadric* roof = new ClippedQuadric(materials[3]);
+        Quadric* cone = new Quadric(materials[3]);
+        cone->setQuadric(coneQ);
+
+        Quadric* clip2 = new Quadric(materials[3]);
+        clip2->setQuadric(parallelPlanesQ);
+        clip2->transform(mat4x4::translation(vec3(0,-1,0)));
+        roof->setQuadrics(cone, clip2);
+        roof->transform(mat4x4::scaling(vec3(0.05,0.15,0.05)) * 
+                mat4x4::translation(vec3(0,.5,0)));
+        objects.push_back(roof);
+
 
 	}
 	~Scene()
