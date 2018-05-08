@@ -369,13 +369,14 @@ public:
 
 };
 
-class ClippedQuadric : public Intersectable
+class ClippedQuadric : public Quadric
 {
     Quadric* shape;
     Quadric* clipper;
 
 public:
-    ClippedQuadric(Material* material) : Intersectable(material) {
+
+    ClippedQuadric(Material* material) : Quadric(material) {
         shape = new Quadric(material);
         clipper = new Quadric(material);
     }
@@ -389,11 +390,13 @@ public:
     ClippedQuadric* setQuadrics(mat4x4 shapeQ, mat4x4 clipperQ) {
         shape->setQuadric(shapeQ);
         clipper->setQuadric(clipperQ);
+        return this;
     }
 
     ClippedQuadric* setQuadrics(Quadric* s, Quadric* c) {
-            shape= s; clipper = c;
-            return this;
+        shape= s; 
+        clipper = c;
+        return this;
         }
 
     Hit intersect(const Ray& ray) {
@@ -583,6 +586,28 @@ public:
         roof->transform(mat4x4::scaling(vec3(0.05,0.15,0.05)) * 
                 mat4x4::translation(vec3(0,.5,0)));
         objects.push_back(roof);
+
+        // palm leaf
+        ClippedQuadric* l = new ClippedQuadric(materials[0]);
+        Quadric* sph = new Quadric(materials[0]);
+        sph->setQuadric(sphereQ);
+
+        Quadric* clip3 = new Quadric(materials[0]);
+        clip3->setQuadric(parallelPlanesQ);
+        clip3->transform(mat4x4::scaling(vec3(1,0.5,1)));
+        l->setQuadrics(sph, clip3);
+
+        Quadric* clip4 = new Quadric(materials[0]);
+        clip4->setQuadric(parallelPlanesQ);
+        clip4->transform(mat4x4::scaling(vec3(1,0.5,1)) * 
+                    mat4x4::rotation(vec3(1,0,0),3.14/2));
+
+        ClippedQuadric* leaf = new ClippedQuadric(materials[0]);
+        leaf->setQuadrics(l, clip4);
+        leaf->transform(mat4x4::scaling(vec3(0.25,0.25,0.25)) *
+                mat4x4::rotation(vec3(0,1,0), 0) *
+                mat4x4::translation(vec3(0,.75,0)));
+        objects.push_back(leaf);
 
 
 	}

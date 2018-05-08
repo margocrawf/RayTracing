@@ -97,12 +97,12 @@ public:
     vec3 shade(vec3 position, vec3 normal, vec3 viewDir,
                vec3 lightDir, vec3 powerDensity) {
 
-        float phi = atan2(position.x, position.z);
+        float phi = atan2(normal.x, normal.z);
         vec3 red = shade_color(vec3(1,0,0), position, normal, viewDir,
                 lightDir, powerDensity);
         vec3 white = shade_color(vec3(1,1,1), position, normal, viewDir,
                 lightDir, powerDensity);
-        return std::fmod(phi, 3.14/32) < 3.14/64 ? red : white;
+        return std::fmod(std::fmod(phi, 3.14/8)+3.14/8,3.14/8) < 3.14/16 ? red : white;
 
     }
 
