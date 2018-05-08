@@ -371,10 +371,10 @@ public:
 
 class ClippedQuadric : public Quadric
 {
-    Quadric* shape;
-    Quadric* clipper;
 
 public:
+    Quadric* shape;
+    Quadric* clipper;
 
     ClippedQuadric(Material* material) : Quadric(material) {
         shape = new Quadric(material);
@@ -425,8 +425,30 @@ public:
 
         return hit;
     }
+};
 
+class PinkingTree : public ClippedQuadric
+{
+public:
 
+    PinkingTree(Material* material) : ClippedQuadric(material) {}
+
+    Hit intersect(const Ray& ray) {
+        Hit hit = ClippedQuadric::intersect(ray);
+
+        float phi = atan2(hit.normal.x, hit.normal.z);
+
+        if (std::fmod(std::fmod(phi, 3.14/8)+3.14/8,3.14/8) < 3.14/16) {
+            return hit;
+        } else {
+            Hit dudHit;
+            dudHit.t = -1;
+            dudHit.material = material;
+            dudHit.position = ray.origin + ray.dir*dudHit.t;
+            hit.normal = shape->getNormalAt(hit.position);
+            return dudHit;
+        }
+    }
 };
 
 class Box : public Intersectable
@@ -526,6 +548,7 @@ public:
         materials.push_back(new Metal(vec3(0,1,1)));
         materials.push_back(new SpecularMaterial( vec3(1,0,0)));
         materials.push_back(new Ball());
+        materials.push_back(new SpecularMaterial( vec3(0.5,0.25,0)));
 
         // make the water
         objects.push_back(new Plane( vec3(0,1,0), vec3(0,-0.4,0), materials[4]));
@@ -588,7 +611,14 @@ public:
         objects.push_back(roof);
 
         // palm leaf
-        ClippedQuadric* l = new ClippedQuadric(materials[0]);
+       
+        ClippedQuadric* trunk = new ClippedQuadric(materials[7]);
+        trunk->setQuadrics(cylinderQ, parallelPlanesQ);
+        trunk->transform(mat4x4::scaling(vec3(0.05,0.2,0.05)) * 
+                     mat4x4::translation(vec3(0.3,0,0.7)));
+        objects.push_back(trunk);
+
+        ClippedQuadric* l = new PinkingTree(materials[0]);
         Quadric* sph = new Quadric(materials[0]);
         sph->setQuadric(sphereQ);
 
@@ -599,8 +629,8 @@ public:
 
         l->transform(mat4x4::scaling(vec3(0.25,0.25,0.25)) *
                 mat4x4::rotation(vec3(0,1,0), 0) *
-                mat4x4::translation(vec3(0,.75,0)));
-        objects.push_back(leaf);
+                mat4x4::translation(vec3(0.3,.15,0.7)));
+        objects.push_back(l);
 
 
 	}
