@@ -509,15 +509,12 @@ public:
         QuadraticRoots qs3 = slab3->solveQuadratic(ray);
         
         float loT1 = qs1.getLesserPositive();
-        float hiT1 = qs1.getGreaterPositive();
         float loT2 = qs2.getLesserPositive();
-        float hiT2 = qs2.getGreaterPositive();
         float loT3 = qs3.getLesserPositive();
-        float hiT3 = qs3.getGreaterPositive();
-
 
         float t;
         Hit hit;
+
         if ((slab2->contains(ray.origin + ray.dir * loT1)) and 
             (slab3->contains(ray.origin + ray.dir * loT1))) {
             t = loT1;
