@@ -593,7 +593,7 @@ public:
         Quadric* ball = new Quadric(materials[6]);
         ball->setQuadric(sphereQ);
         ball->transform(mat4x4::scaling(vec3(0.25,0.25,0.25)) * 
-                     mat4x4::translation(vec3(1,0.01,0.3)));
+                     mat4x4::translation(vec3(1,0.25,0.3)));
         objects.push_back(ball);
 
         //make parasol
@@ -700,8 +700,8 @@ public:
         Hit hit = firstIntersect(ray);
 
 		if(hit.t < 0)
-			//return vec3(0.5,0.8,0.9);
-            return vec3(0,0,0);
+			return vec3(0.5,0.8,0.9);
+            //return vec3(0,0,0);
 
         if ((hit.material != NULL) && (dynamic_cast<Metal*>(hit.material))) {
             vec3 raydir = (hit.normal.normalize() * hit.position) * 2 * (hit.normal - hit.position);
