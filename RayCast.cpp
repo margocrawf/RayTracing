@@ -244,46 +244,6 @@ public:
 
 // Object realization.
 
-class Sphere : public Intersectable
-{
-	vec3 center;
-	float radius;
-public:
-    Sphere(const vec3& center, float radius, Material* material):
-		Intersectable(material),
-		center(center),
-		radius(radius)
-    {
-    }
-	QuadraticRoots solveQuadratic(const Ray& ray)
-	{
-        vec3 diff = ray.origin - center;
-        float a = ray.dir.dot(ray.dir);
-        float b = diff.dot(ray.dir) * 2.0;
-        float c = diff.dot(diff) - radius * radius;
-		return QuadraticRoots(a, b, c);
- 
-	}
-	vec3 getNormalAt(vec3 r)
-	{
-		return (r - center).normalize();
-	}
-    Hit intersect(const Ray& ray)
-    {
-		// This is a generic intersect that works for any shape with a quadratic equation. solveQuadratic should solve the proper equation (+ ray equation) for the shape, and getNormalAt should return the proper normal.
-
-		float t = solveQuadratic(ray).getLesserPositive();
-			
-		Hit hit;
-		hit.t = t;
-		hit.material = material;
-		hit.position = ray.origin + ray.dir * t;
-		hit.normal = getNormalAt(hit.position);
-
-		return hit;
-    }
-}; 
-
 class Plane : public Intersectable
 {
     vec3 normal;
