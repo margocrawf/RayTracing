@@ -509,7 +509,6 @@ public:
         return hit;
     }
 
-
 };
 
 class Scene
@@ -529,7 +528,7 @@ public:
         materials.push_back(new Material( vec3(0,1,0)));
         materials.push_back(new Material( vec3(0,0,1)));
         materials.push_back(new Wood());
-        materials.push_back(new DiffuseMaterial( vec3(1,1,0)));
+        materials.push_back(new DiffuseMaterial( vec3(0.8,0.8,0.5)));
         materials.push_back(new Metal(vec3(0,1,1)));
         materials.push_back(new SpecularMaterial( vec3(1,0,0)));
         materials.push_back(new Ball());
